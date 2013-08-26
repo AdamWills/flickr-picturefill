@@ -230,7 +230,7 @@ class Flickr_Picturefill {
 			wp_enqueue_script( $this->plugin_slug . '-plugin-script' );
 
 			$sizes = $rsp_obj['sizes']['size'];
-			$output = '<span data-picture data-alt="'.$atts['alt'].'">';
+			$output = '<div class="responsive-image"><span data-picture data-alt="'.$atts['alt'].'">';
 			$output.= '<span data-src="'.$sizes[4]['source'].'"></span>';
 			$output.= '<span data-src="'.$sizes[7]['source'].'" data-media="(min-width: 400px)"></span>';
     		$output.= '<span data-src="'.$sizes[8]['source'].'" data-media="(min-width: 800px)"></span>';
@@ -241,7 +241,7 @@ class Flickr_Picturefill {
     		$output.= '<img src="external/imgs/small.jpg" alt="'.$atts['alt'].'">';
         	$output.= '</noscript>';
 
-        	$output.= '</span>';
+        	$output.= '</span></div>';
 
 			return $output;
 
