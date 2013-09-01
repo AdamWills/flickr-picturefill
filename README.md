@@ -10,10 +10,12 @@ Do you have a lot of photos on your Wordpress blog? Why not combine the power of
 This plugin uses the Flickr API to turn a simple shortcode into a responsive image with full browser support.
 
 ## Usage
-1. Install the plugin
-2. Upload your images to Flickr
-3. Get the ID of the image you want to post (e.g. http://www.flickr.com/photos/username/9632889598/ - the ID for this photo is 9632889598)
-4. Add the shortcode to your page/post - [picturefill id='9632889598' alt='Alternate Text']
-5. Profit
+1. Get a <a href="http://www.flickr.com/services/api/misc.api_keys.html">free Flickr API key</a>
+2. Install the plugin
+3. Add your API Key to the plugin settings
+4. Upload your images to Flickr
+5. Get the ID of the image you want to post (e.g. http://www.flickr.com/photos/username/123456789/ - the ID for this photo is 123456789)
+6. Add the shortcode to your page/post - [picturefill id='123456789' alt='Alternate Text']
+7. Profit
 
 Note that the Flickr API terms of use insists that all images uploaded to Flickr be photographs - and not images for websites ( logos, visual pieces, etc).
