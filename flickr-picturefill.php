@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package   Flickr Picturefill
  * @author    Adam Wills <adam@adamwills.com>
@@ -30,5 +31,3 @@ register_activation_hook( __FILE__, array( 'Flickr_Picturefill', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'Flickr_Picturefill', 'deactivate' ) );
 
 Flickr_Picturefill::get_instance();
-
-

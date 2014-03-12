@@ -11,7 +11,7 @@
  * Plugin class.
  *
  * @package Flickr_Picturefill
- * @author  Adam Wills <adam@adamwills.com>
+ * @author  Your Name <email@example.com>
  */
 class Flickr_Picturefill {
 
@@ -61,13 +61,20 @@ class Flickr_Picturefill {
 	 */
 	private function __construct() {
 
+		// Load plugin text domain
+		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
+
 		// Add the options page and menu item.
 		add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
-		add_action( 'admin_init', array( $this, 'register_mysettings' ) );
 
 		// Add an action link pointing to the options page.
 		$plugin_basename = plugin_basename( plugin_dir_path( __FILE__ ) . 'flickr-picturefill.php' );
 		add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
+
+		// Load admin style sheet and JavaScript.
+		// add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
+		// add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+
 
 		add_shortcode( 'picturefill', array( $this, 'create_shortcode' ) );
 
@@ -91,12 +98,65 @@ class Flickr_Picturefill {
 	}
 
 	/**
+	 * Fired when the plugin is activated.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    boolean    $network_wide    True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog.
+	 */
+	public static function activate( $network_wide ) {
+		// TODO: Define activation functionality here
+	}
+
+	/**
+	 * Fired when the plugin is deactivated.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    boolean    $network_wide    True if WPMU superadmin uses "Network Deactivate" action, false if WPMU is disabled or plugin is deactivated on an individual blog.
+	 */
+	public static function deactivate( $network_wide ) {
+		// TODO: Define deactivation functionality here
+	}
+
+	/**
+	 * Load the plugin text domain for translation.
+	 *
+	 * @since    1.0.0
+	 */
+	public function load_plugin_textdomain() {
+
+		$domain = $this->plugin_slug;
+		$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
+
+		load_textdomain( $domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo' );
+		load_plugin_textdomain( $domain, FALSE, basename( dirname( __FILE__ ) ) . '/lang/' );
+	}
+
+
+
+	/**
+	 * Register and enqueues public-facing JavaScript files.
+	 *
+	 * @since    1.0.0
+	 */
+	public function register_scripts() {
+	}
+
+	/**
 	 * Register the administration menu for this plugin into the WordPress Dashboard menu.
 	 *
 	 * @since    1.0.0
 	 */
 	public function add_plugin_admin_menu() {
 
+		/*
+		 * TODO:
+		 *
+		 * Change 'Page Title' to the title of your plugin admin page
+		 * Change 'Menu Text' to the text for menu item for the plugin settings page
+		 * Change 'plugin-name' to the name of your plugin
+		 */
 		$this->plugin_screen_hook_suffix = add_plugins_page(
 			__( 'Flickr Picturefill', $this->plugin_slug ),
 			__( 'Flickr Picturefill Settings', $this->plugin_slug ),
@@ -117,16 +177,6 @@ class Flickr_Picturefill {
 	}
 
 	/**
-	 * Register settings to be used by the plugin.
-	 *
-	 * @since    1.0.0
-	 */
-	function register_mysettings() { // whitelist options
-	  $option_group = 'flickr_picturefill_options';
-	  register_setting( $option_group, 'flickrpf_api_key' );
-	}
-
-	/**
 	 * Add settings action link to the plugins page.
 	 *
 	 * @since    1.0.0
@@ -143,7 +193,7 @@ class Flickr_Picturefill {
 	}
 
 	/**
-	 * Create shortcode to use in posts/pages
+	 * Add settings action link to the plugins page.
 	 *
 	 * @since    1.0.0
 	 */
@@ -154,55 +204,10 @@ class Flickr_Picturefill {
 			'alt' => '',
 		), $atts ) );
 
-		$transient_name = 'get_flickr_id_' + $atts['id'];
-
-		if ( false === ( $sizes = get_transient( $transient_name ) ) ) {
-
-			if ( false === ( $sizes = $this->get_photo_object( $atts['id'] ) ) ) {
-
-				return "Unable to get photo from Flickr";
-
-			}
-
-			else {
-
-				set_transient( $transient_name, $sizes, 24 * HOUR_IN_SECONDS );
-
-			}
-
-		}
-
-		
-		wp_register_script( $this->plugin_slug . '-plugin-script', plugins_url( 'js/picturefill.min.js', __FILE__ ) );
-		wp_enqueue_script( $this->plugin_slug . '-plugin-script' );
-
-		
-		$output = '<div class="responsive-image"><span data-picture data-alt="'.$atts['alt'].'">';
-		$output.= '<span data-src="'.$sizes[4]['source'].'"></span>';
-		$output.= '<span data-src="'.$sizes[7]['source'].'" data-media="(min-width: 400px)"></span>';
-		$output.= '<span data-src="'.$sizes[8]['source'].'" data-media="(min-width: 800px)"></span>';
-		$output.= '<span data-src="'.$sizes[9]['source'].'" data-media="(min-width: 1000px)"></span>';
-
-		$output.= '<!--[if (lt IE 9) & (!IEMobile)]>';
-		$output.= '<span data-src="'.$sizes[8]['source'].'"></span>';
-		$output.= '<![endif]-->';
-
-		$output.= '<!-- Fallback content for non-JS browsers. Same img src as the initial, unqualified source element. -->';
-		$output.= '<noscript>';
-		$output.= '<img src="external/imgs/small.jpg" alt="'.$atts['alt'].'">';
-    	$output.= '</noscript>';
-
-    	$output.= '</span></div>';
-
-		return $output;
-
-	}
-
-	public function get_photo_object( $id ) {
 		$params = array(
-			'api_key'	=> get_option( 'flickrpf_api_key' ),
+			'api_key'	=> 'a7243d919dd70c951623cc75b5b1b3f8',
 			'method'	=> 'flickr.photos.getSizes',
-			'photo_id'	=> $id,
+			'photo_id'	=> $atts['id'],
 			'format'	=> 'php_serial',
 		);
 
@@ -214,14 +219,41 @@ class Flickr_Picturefill {
 
 		$url = "http://api.flickr.com/services/rest/?".implode('&', $encoded_params);
 
-		$rsp = file_get_contents($url);
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_HEADER, false);
+		$rsp = curl_exec($curl);
+		curl_close($curl);
 
 		$rsp_obj = unserialize($rsp);
 
-		if ($rsp_obj['stat'] == 'ok')
-			return $rsp_obj['sizes']['size'];
-		else
-			return false;
+		if ($rsp_obj['stat'] == 'ok'){
+
+
+			wp_register_script( $this->plugin_slug . '-plugin-script', plugins_url( 'js/picturefill.min.js', __FILE__ ) );
+			wp_enqueue_script( $this->plugin_slug . '-plugin-script' );
+
+			$sizes = $rsp_obj['sizes']['size'];
+			$output = '<div class="responsive-image"><span data-picture data-alt="'.$atts['alt'].'">';
+			$output.= '<span data-src="'.$sizes[4]['source'].'"></span>';
+			$output.= '<span data-src="'.$sizes[7]['source'].'" data-media="(min-width: 400px)"></span>';
+    		$output.= '<span data-src="'.$sizes[8]['source'].'" data-media="(min-width: 800px)"></span>';
+    		$output.= '<span data-src="'.$sizes[9]['source'].'" data-media="(min-width: 1000px)"></span>';
+
+    		$output.= '<!-- Fallback content for non-JS browsers. Same img src as the initial, unqualified source element. -->';
+    		$output.= '<noscript>';
+    		$output.= '<img src="external/imgs/small.jpg" alt="'.$atts['alt'].'">';
+        	$output.= '</noscript>';
+
+        	$output.= '</span></div>';
+
+			return $output;
+
+		} else {
+
+			return "Call failed!";
+		}
 	}
 }
 
