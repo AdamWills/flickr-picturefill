@@ -10,7 +10,7 @@
  * Plugin Name: Flickr Picturefill
  * Plugin URI:  http://adamwills.com/
  * Description: A plugin that combines the power of picturefill and the Flickr API to provide responsive images
- * Version:     1.0.0
+ * Version:     2.0.0
  * Author:      Adam Wills
  * Author URI:  http://adamwills.com
  * Text Domain: plugin-name-locale

@@ -22,7 +22,7 @@ class Flickr_Picturefill {
 	 *
 	 * @const   string
 	 */
-	const VERSION = '1.0.0';
+	const VERSION = '2.0.0';
 
 	/**
 	 * Unique identifier for your plugin.
@@ -71,9 +71,9 @@ class Flickr_Picturefill {
 		$plugin_basename = plugin_basename( plugin_dir_path( __FILE__ ) . 'flickr-picturefill.php' );
 		add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
 
-		// Load admin style sheet and JavaScript.
-		// add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
-		// add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+		// Load public-facing JavaScript.
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+
 
 
 		add_shortcode( 'picturefill', array( $this, 'create_shortcode' ) );
@@ -97,27 +97,6 @@ class Flickr_Picturefill {
 		return self::$instance;
 	}
 
-	/**
-	 * Fired when the plugin is activated.
-	 *
-	 * @since    1.0.0
-	 *
-	 * @param    boolean    $network_wide    True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog.
-	 */
-	public static function activate( $network_wide ) {
-		// TODO: Define activation functionality here
-	}
-
-	/**
-	 * Fired when the plugin is deactivated.
-	 *
-	 * @since    1.0.0
-	 *
-	 * @param    boolean    $network_wide    True if WPMU superadmin uses "Network Deactivate" action, false if WPMU is disabled or plugin is deactivated on an individual blog.
-	 */
-	public static function deactivate( $network_wide ) {
-		// TODO: Define deactivation functionality here
-	}
 
 	/**
 	 * Load the plugin text domain for translation.
@@ -140,8 +119,11 @@ class Flickr_Picturefill {
 	 *
 	 * @since    1.0.0
 	 */
-	public function register_scripts() {
+	public function enqueue_scripts() {
+		wp_register_script( $this->plugin_slug . '-plugin-script', plugins_url( 'js/picturefill.min.js', __FILE__ ) );
+		wp_enqueue_script( $this->plugin_slug . '-plugin-script' );
 	}
+
 
 	/**
 	 * Register the administration menu for this plugin into the WordPress Dashboard menu.
@@ -150,14 +132,7 @@ class Flickr_Picturefill {
 	 */
 	public function add_plugin_admin_menu() {
 
-		/*
-		 * TODO:
-		 *
-		 * Change 'Page Title' to the title of your plugin admin page
-		 * Change 'Menu Text' to the text for menu item for the plugin settings page
-		 * Change 'plugin-name' to the name of your plugin
-		 */
-		$this->plugin_screen_hook_suffix = add_plugins_page(
+		$this->plugin_screen_hook_suffix = add_options_page(
 			__( 'Flickr Picturefill', $this->plugin_slug ),
 			__( 'Flickr Picturefill Settings', $this->plugin_slug ),
 			'read',
@@ -204,66 +179,60 @@ class Flickr_Picturefill {
 			'alt' => '',
 		), $atts ) );
 
-		$params = array(
-			'api_key'	=> 'a7243d919dd70c951623cc75b5b1b3f8',
-			'method'	=> 'flickr.photos.getSizes',
-			'photo_id'	=> $atts['id'],
-			'format'	=> 'php_serial',
-		);
+		$trans_name = 'flickrpf-'. $atts['id'];
 
-		$encoded_params = array();
 
-		foreach ($params as $k => $v){
-			$encoded_params[] = urlencode($k).'='.urlencode($v);
+
+		if ( false === ( $output = get_transient( $trans_name ) ) ) {
+
+			$params = array(
+				'api_key'	=> get_option('flickrpf_api_key'),
+				'method'	=> 'flickr.photos.getSizes',
+				'photo_id'	=> $atts['id'],
+				'format'	=> 'php_serial',
+			);
+
+			$encoded_params = array();
+
+			foreach ($params as $k => $v){
+				$encoded_params[] = urlencode($k).'='.urlencode($v);
+			}
+
+			$url = "https://api.flickr.com/services/rest/?".implode('&', $encoded_params);
+
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_URL, $url);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($curl, CURLOPT_HEADER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+			$rsp = curl_exec($curl);
+
+			if(curl_errno($curl)) {
+			    return curl_error($curl);
+			}
+
+			curl_close($curl);
+
+			$rsp_obj = unserialize($rsp);
+
+			if ( $rsp_obj['stat'] == 'ok' ) {
+
+				$sizes = $rsp_obj['sizes']['size'];
+
+	        	$output = '<picture>';
+	        	$output.= '<!--[if IE 9]><video style="display: none;"><![endif]-->'; // IE9 support
+				$output.= '<source srcset="'.$sizes[9]['source'].'" media="(min-width: 1000px)">';
+				$output.= '<source srcset="'.$sizes[8]['source'].'" media="(min-width: 800px)">';
+				$output.= '<!--[if IE 9]></video><![endif]-->'; // IE9 support
+				$output.= '<img srcset="' . $sizes[4]['source'] . '" alt="' . $atts['alt'] . '">';
+				$output.= '</picture>';
+
+				set_transient( $trans_name, $output, 2 * 24 * HOUR_IN_SECONDS );
+
+			}
 		}
-
-		$url = "http://api.flickr.com/services/rest/?".implode('&', $encoded_params);
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($curl, CURLOPT_HEADER, false);
-		$rsp = curl_exec($curl);
-		curl_close($curl);
-
-		$rsp_obj = unserialize($rsp);
-
-		if ($rsp_obj['stat'] == 'ok'){
-
-
-			wp_register_script( $this->plugin_slug . '-plugin-script', plugins_url( 'js/picturefill.min.js', __FILE__ ) );
-			wp_enqueue_script( $this->plugin_slug . '-plugin-script' );
-
-			$sizes = $rsp_obj['sizes']['size'];
-			$output = '<div class="responsive-image"><span data-picture data-alt="'.$atts['alt'].'">';
-			$output.= '<span data-src="'.$sizes[4]['source'].'"></span>';
-			$output.= '<span data-src="'.$sizes[7]['source'].'" data-media="(min-width: 400px)"></span>';
-    		$output.= '<span data-src="'.$sizes[8]['source'].'" data-media="(min-width: 800px)"></span>';
-    		$output.= '<span data-src="'.$sizes[9]['source'].'" data-media="(min-width: 1000px)"></span>';
-
-    		$output.= '<!-- Fallback content for non-JS browsers. Same img src as the initial, unqualified source element. -->';
-    		$output.= '<noscript>';
-    		$output.= '<img src="external/imgs/small.jpg" alt="'.$atts['alt'].'">';
-        	$output.= '</noscript>';
-
-        	$output.= '</span></div>';
-
-			return $output;
-
-		} else {
-
-			return "Call failed!";
-		}
+		
+		return $output;
 	}
 }
-
-
-
-
-/* plugin settings
-		flickr-secret-code - from api key - 3a6ede310a398056
-		api-key - a7243d919dd70c951623cc75b5b1b3f8
-
-		
-		IE8 support
-*/     
