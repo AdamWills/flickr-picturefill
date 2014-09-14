@@ -74,9 +74,11 @@ class Flickr_Picturefill {
 		// Load public-facing JavaScript.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
-
-
 		add_shortcode( 'picturefill', array( $this, 'create_shortcode' ) );
+
+		add_filter('media_upload_tabs', array( $this, 'add_tab_to_media_uploader' ) );
+
+		add_action( 'media_upload_flickrframe', array( $this, 'display_flickr_photostream')	);
 
 	}
 
@@ -235,4 +237,32 @@ class Flickr_Picturefill {
 		
 		return $output;
 	}
+
+	
+	/**
+	 * Add page to media upload to display Flickr Photostream
+	 *
+	 * @since    2.1.0
+	 *
+	 */
+	public function add_tab_to_media_uploader( $tabs ) {
+		$flickr_tab = array( 'flickrframe' => __( 'Flickr', 'flickr') );
+		return array_merge( $tabs, $flickr_tab );
+	}
+
+	/**
+	 * Display Flickr Photostream
+	 *
+	 * @since    2.1.0
+	 *
+	 */
+
+	public function display_flickr_photostream() {
+		media_upload_header();
+		echo "Yo!";
+		$output = '<input type="hidden" id="flickr_api_key" name="api_key" value="' . get_option('flickrpf_api_key') . '">';
+		$output.= '<input type="hidden" id="flickr_user_id" name="flickr_userid" value="' . get_option('flickrpf_user_id') . '">';
+		$output.= '<script type="text/javascript">console.log("fired");</script>';
+	}
+
 }
