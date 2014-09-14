@@ -26,8 +26,4 @@ if ( ! defined( 'WPINC' ) ) {
 
 require_once( plugin_dir_path( __FILE__ ) . 'class-flickr-picturefill.php' );
 
-// Register hooks that are fired when the plugin is activated, deactivated, and uninstalled, respectively.
-register_activation_hook( __FILE__, array( 'Flickr_Picturefill', 'activate' ) );
-register_deactivation_hook( __FILE__, array( 'Flickr_Picturefill', 'deactivate' ) );
-
 Flickr_Picturefill::get_instance();
