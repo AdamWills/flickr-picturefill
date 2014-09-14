@@ -17,27 +17,26 @@
 	<h2>Flickr Picturefill</h2>
 
 	<form method="post" action="options.php">
-		<?php wp_nonce_field('update-options'); ?>
-		<?php settings_fields( 'flickr_picturefill_options' ); ?>
+
+
+		<?php settings_fields( $this->plugin_slug . '_setting_group' ); ?>
+		<?php do_settings_sections( $this->plugin_slug . '_setting_group' ); ?>
 
 		<table class="form-table">
-
-		<tr valign="top">
-			<th scope="row">Flickr API Key</th>
-			<td><input type="text" name="flickrpf_api_key" style="width:19em" value="<?php echo get_option('flickrpf_api_key'); ?>" /></td>
-		</tr>
-		<tr valign="top">
-			<th scope="row">Your Flickr User Id</th>
-			<td><input type="text" name="flickrpf_user_id" style="width:19em" value="<?php echo get_option( 'flickrpf_user_id' ); ?>"></td>
-		</tr>
-		 
+			<tr valign="top">
+				<th scope="row">Flickr API Key</th>
+				<td>
+					<input type="text" name="flickr_api_key" value="<?php echo get_option('flickr_api_key'); ?>">
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">Your Flickr User ID</th>
+				<td><input type="text" name="flickr_user_id" value="<?php echo get_option('flickr_user_id'); ?>"></td>
+			</tr>
 		</table>
 
-		<input type="hidden" name="action" value="update" />
-		<input type="hidden" name="page_options" value="flickrpf_api_key" />
-
 		<p class="submit">
-		<input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" />
+			<input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" />
 		</p>	
 
 	</form>
