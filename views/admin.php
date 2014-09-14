@@ -26,6 +26,10 @@
 			<th scope="row">Flickr API Key</th>
 			<td><input type="text" name="flickrpf_api_key" style="width:19em" value="<?php echo get_option('flickrpf_api_key'); ?>" /></td>
 		</tr>
+		<tr valign="top">
+			<th scope="row">Your Flickr User Id</th>
+			<td><input type="text" name="flickrpf_user_id" style="width:19em" value="<?php echo get_option( 'flickrpf_user_id' ); ?>"></td>
+		</tr>
 		 
 		</table>
 
