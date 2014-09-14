@@ -81,7 +81,7 @@ class Flickr_Picturefill {
 
 		add_filter('media_upload_tabs', array( $this, 'add_tab_to_media_uploader' ) );
 
-		add_action( 'media_upload_flickrframe', array( $this, 'display_flickr_photostream')	);
+		add_action( 'media_upload_flickrcontent', array( $this, 'display_flickr_photostream_iframe')	);
 
 	}
 
@@ -262,8 +262,12 @@ class Flickr_Picturefill {
 	 *
 	 */
 	public function add_tab_to_media_uploader( $tabs ) {
-		$flickr_tab = array( 'flickrframe' => __( 'Flickr', 'flickr') );
+		$flickr_tab = array( 'flickrcontent' => __( 'Flickr', 'flickr') );
 		return array_merge( $tabs, $flickr_tab );
+	}
+
+	public function display_flickr_photostream_iframe() {
+		return wp_iframe( array( $this, 'display_flickr_photostream' ) );
 	}
 
 	/**
@@ -275,10 +279,10 @@ class Flickr_Picturefill {
 
 	public function display_flickr_photostream() {
 		media_upload_header();
-		echo "Yo!";
-		$output = '<input type="hidden" id="flickr_api_key" name="api_key" value="' . get_option('flickrpf_api_key') . '">';
-		$output.= '<input type="hidden" id="flickr_user_id" name="flickr_userid" value="' . get_option('flickrpf_user_id') . '">';
-		$output.= '<script type="text/javascript">console.log("fired");</script>';
+		wp_enqueue_style( 'media' );
+		wp_enqueue_style( 'media-views' );
+		wp_enqueue_scripts( 'flickrpfmedia', plugin_dir_url( __FILE__ ) . 'js/admin.js', 'jquery' );
+		include_once( 'views/media.php' );
 	}
 
 }
